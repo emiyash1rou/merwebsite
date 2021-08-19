@@ -48,7 +48,95 @@ urlpatterns = [
 ```
 
 - In urls.py main create ur url
-``` path("v1/",views.v1,name="view 1"),
+``` 
+path("v1/",views.v1,name="view 1"),
 
 ```
-# Ended at 21 minutes
+### SQLITE3 Database Section
+#### In settings.py of mysite
+- the purpose of this to tell django that there is a dependency that needs to be installed inside of project
+- modify code in the INSTALLED_APPS=[]
+```
+'main.apps.MainConfig',
+```
+- name of application 'main' then '.apps.' then 'nameofapplication'+'Config'.
+- then run it ```python manage.py migrate```
+- what it does is update settings.py
+#### Making models attributes for db in models.py
+- add this to models.py
+``` 
+class ToDoList(models.Model):
+    name = models.CharField(max_length=200)
+
+
+    def __str__(self):
+        return self.name
+class Item(models.Model):
+    todolist = models.ForeignKey(ToDoList, on_delete=models.CASCADE)
+    text=models.CharField(max_length=300)
+    complete=models.BooleanField()
+    def __str__(self):
+        return self.text
+    
+```
+- what this does is make a model db of an object. So it's like items have foreignkey based on their todolist. And cascade means deleting it will just delete and up it again so there will be no holes.
+- doing this ``` python manage.py makemigrations main ``` makemigrations [name of app]
+- what this does is saving of making a change. like git add 
+- to commit it to the project like making it work then you migrate it using ```python manage.py migrate``` this needs to be done to apply it.
+#### ADDING STUFF IN THE SQLITE DB
+- Accessing shell of python, allowing adding some things in db ```python manage.py shell ```
+```
+from main.models import Item, ToDoList
+t= ToDoList(name="Tim\'s List") #t object
+t.save() #save t object
+ToDoList.objects.all()  #see all ToDoList objects
+ToDoList.objects.get(id=1) # see toDoList using Id 
+ToDoList.objects.get(name="Tim's List") # see toDoList using name 
+ToDoList.objects.get(id=2) #just a test to see the error because query is error/doesn't exist
+t.item_set.all() #since foreignkey si item, assumed na siya ang item and item_set is a function that lists the contents of foreign key
+t.item_set.create(text="Go to the mall", complete=False) #creates an item based on model Item. It requires text and complete status. 
+ToDoList need not instantiate because t is already a ToDoList
+t.item_set.all() # to get all item_set in t.
+t.item_set.get(id=1) # id
+```
+#### focusing on the main and views.py to make reflect db to website
+- clear v1. Clear it on views.py and the urls.py
+```
+#views.py clear
+def v1(response):
+    return HttpResponse("<h1>view 1</h1>")
+#urls.py clear
+path("v1/",views.v1,name="view 1"),
+```
+- typing the id to the searchbar to pop up a custom link
+``` 
+# in views.py
+def index(response,id):
+    return HttpResponse("<h1>%s</h1>"% id)
+# in urls.py
+from django.urls import path
+from .import views
+
+urlpatterns=[
+    path("<int:id>",views.index,name="index"),
+    
+]
+```
+- run ``` python manage.py runserver```
+#### access the ToDoList
+```
+from django.shortcuts import render
+from django.http import HttpResponse
+from .models import ToDoList, Item
+# Create your views here.
+def index(response,id):
+    ls=ToDoList.objects.get(id=id)
+    return HttpResponse("<h1>%s</h1>"% ls.name)
+
+```
+- what it modified was it added import of models where the db is then it created ls object that keeps ToDoList objects specific to the id then it returned with ls.name, which is the characteristic of the ToDoList, which is 'name'.
+- better way to include other stuff is to do 
+```
+item= ls.item_set.get(id=1)
+return HttpResponse("<h1>%s</h1><br></br><p>%</p>"% (ls.name,item.text))
+
