@@ -139,4 +139,168 @@ def index(response,id):
 ```
 item= ls.item_set.get(id=1)
 return HttpResponse("<h1>%s</h1><br></br><p>%</p>"% (ls.name,item.text))
+```
+### ADMIN DASHBOARD
+- querying
+``` python manage.py shell```
+``` from main.models import Item, ToDoList 
+t=ToDoList.objects
+t.all()
+t.filter(name__startswith="Tim")
+t.filter(name__startswith="Bob")
+t.filter(id=2) #check filter querying
+del_object= t.get(id=1)
+del_object.delete()
+t1=ToDoList(name="First List")
+t1.save()
+t2=ToDoList(name="Second List")
+t2.save()
+```
+#### ACCESSING ADMIN SIDE
+- Create account 
+``` python manage.py createsuperuser ```
+- Give dashboard access to the db
+- Go to admin.py inside main application folder
+- insert code
+``` from django.contrib import admin
+from .models import ToDoList
 
+# Register your models here.
+admin.site.register(ToDoList)
+```
+- for every new model on the database, you need to include it to be able to see on the admin side
+- it allows u to access the object to the admin side
+### MAKING WEBSITE TEMPLATES CUSTOM HTML
+#### Go to urls.py and views.py to make a path
+- Make in views.py ``` def home(response): pass ```
+- Make in urls.py ``` path("",views.home,name="home"),```
+- Make a template folder in the main application then inside the template folder make a main folder. Inside the innermost main folder, create base.html and home.html
+
+
+- Base html will show up all the constant elements that will appear in every page regardless if its logging in, logging out, profile etc like facebook sidebar.
+- then add this code to base html 
+``` <html>
+    <head>
+        <title>Tim's Website</title>
+    </head>
+    <body>
+        <p>Base Template</p>
+    </body>
+</html> 
+```
+- home html to inherit base.html is ``` {% extends 'main/base.html' %} ```
+- next, we render the html to the views by going to views.py.
+- remove httpresponse in index function and add 
+``` def index(response,id):
+    ls=ToDoList.objects.get(id=id)
+    item= ls.item_set.get(id=1)
+    return render(response, "main/base.html",{})
+def home(response):
+    return render(response, "main/home.html",{}) 
+```
+#### Put content from db to the views.py
+- In views.py, include this code in function index ```     return render(response, "main/base.html",{"name":ls.name}) ``` and in home function ``` return render(response, "main/home.html",{"name":"test"}) ```
+- What it does is it passes the ls.name to the views. ls is a ToDoList declaration in order to be accessible. "Test" is only created there so no complications but you can definitely access it in views.py since .Models is used.
+- Now for the home.html. You can put them by using double brackets. {{}}. So add this on the paragraph section ``` <p>{{name}}</p> ```
+- It should print the list according to the id Like id 2 would print First List, then 3 would be second List.
+#### Content Block. 
+- What this does is that it provides you a customized slot to create/fill on the base.html. For instance, if you want your base html sidebar to have a label for where the website is in currently, These blocks would be used to customized based on which link they went.
+- In base.html code this 
+``` <div id="content" name="content">
+        {% block content %}
+        {% endblock %}
+        </div> 
+```
+- div contains it and {% block name %} is the block which you'll plot the customized response in base.html
+- Now in home.html code this
+``` {% block content %}
+<h1> Home Page</h1>
+{% endblock %} 
+```
+- What it does is it has the same block name that is found in base html but only that it has a content which is Home Page. Home. This is the block where it interacts with the base.html since it is extended
+- Change index function on views.py since there's no need to do it anymore. Remove the oopen dictionary. ``` {{"name":ls.name}} `and also the "test" part in the home function.```
+- So if you would want to change the title of html based on the link they're in. Do this repetition
+- home.html(put block and the detail) -> base.html(create block and write the default title inside it so that it'll get replaced once overriden)
+- home.html 
+``` {% block title %}
+<h1> Tim's Website</h1>
+{% endblock %} 
+```
+- base.html 
+```         <title>{% block title %} Mer's Website {% endblock %}</title> 
+```
+### CREATING ANOTHER PAGE TO VIEW LISTS
+#### LIST.HTML
+- Create list.html in the main folder inside templates.html
+- extend it to base html by ``` {% extends 'main/base.html' %} ```
+- put corresponding blocks 
+``` {% block title %} View List {% endblock %}
+
+{% block content %}  {% endblock %} 
+```
+- then in your views.py pass the ToDoList seen in views.py. So it is labeled 'ls'. In the open dictionary.
+- ```return render(response, "main/base.html",{"ls":ls}) ```
+- add this to list.html 
+``` {% block content %}
+    <h1>{{ls.name}} </h1> 
+    <ul>
+    {% for item in ls.item_set.all %}
+    <li>{{item.text}}</li>
+    {% endfor %}
+    </ul> 
+{% endblock %} 
+```
+- What this does is that it creates a for loop that loops the items in Item. So you need to have a block statement then for loop and then merge it with html lists. <ul> and <li> to be able to arrange it html.
+- add items in ToDoList model by using Shell
+``` >>> from main.models import Item, ToDoList
+>>> ls=ToDoList.objects.get(id=2)
+>>> ls
+<ToDoList: First List>
+>>> ls.item_set.all()
+<QuerySet []>
+>>> ls.item_set.create(text="First item", complete=False)
+<Item: First item>
+>>> ls.item_set.create(text="Second item", complete=False)
+<Item: Second item>
+>>> ls.item_set.create(text="Third item", complete=False) 
+<Item: Third item> 
+```
+- Go to the link and it should show.
+#### IF STATEMENT
+- update list.html 
+```
+{% block content %}
+    <h1>{{ls.name}} </h1> 
+    <ul>
+    {% for item in ls.item_set.all %}
+        {% if item.complete==False %}
+            <li>{{item.text}}</li>
+        {% endif %}
+    {% endfor %}
+    </ul> 
+{% endblock %}
+```
+- What it does is that it checks if item.complete is False and if it is then it will print otherwise it won't show in the list.
+- Add Items in list that has complete=True to demonstrate
+``` >>> from main.models import ToDoList, Item
+>>> ls=ToDoList.objects.get(id=2)
+>>> ls.item_set.create(text="Not showing",complete=True)
+<Item: Not showing> 
+```
+- <span style="color:red">{% %} IS VERY IMPORTANT. THEY MUST BE CLOSE TO EACH OTHER. THE { AND THE % </span>.
+- Adding else to the code
+``` 
+{% block content %}
+    <h1>{{ls.name}} </h1> 
+    <ul>
+    {% for item in ls.item_set.all %}
+        {% if item.complete == False %}
+            <li>{{item.text}} = INCOMPLETE</li>
+        {% else %} <li>{{item.text}} = COMPLETE</li> 
+        {% endif %}
+    {% endfor %}
+    </ul> 
+{% endblock %}
+```
+- You don't have to enclose else since there is an if for them, it automatically sees it.
+### CREATING THE CREATE TO DO LIST PAGE
