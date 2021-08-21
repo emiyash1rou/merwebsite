@@ -287,7 +287,7 @@ def home(response):
 >>> ls.item_set.create(text="Not showing",complete=True)
 <Item: Not showing> 
 ```
-- <span style="color:red">{% %} IS VERY IMPORTANT. THEY MUST BE CLOSE TO EACH OTHER. THE { AND THE % </span>.
+- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `#f03c15` {% %} IS VERY IMPORTANT. THEY MUST BE CLOSE TO EACH OTHER. THE { AND THE % - ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `#f03c15`
 - Adding else to the code
 ``` 
 {% block content %}
