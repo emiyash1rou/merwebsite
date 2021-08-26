@@ -303,4 +303,307 @@ def home(response):
 {% endblock %}
 ```
 - You don't have to enclose else since there is an if for them, it automatically sees it.
-### CREATING THE CREATE TO DO LIST PAGE
+### CREATING THE CREATE LIST TO DO LIST PAGE
+- Create path to the page
+- Urls.py -> Views.py -> Create html file ->extend to the base.html
+- in urls.py
+```
+path("create/",views.create,name="create"),
+```
+- in views.py 
+```
+def create(response):
+    return render(response, "main/create.html",{})
+```
+- in create.html 
+```
+{% extends 'main/base.html' %}
+{% block title %} Create New List {% endblock %}
+{% block content %} Create New List {% endblock %}
+```
+#### CREATING THE FORM
+- You still create form like in HTML but django has an easier implementation of form
+```
+<form method="post" action="/create/">
+{{form}}
+<button type="submit", name="save"Create New></button>
+</form>
+```
+- Create forms.py in main application directory. NOT THE TEMPLATES MAIN DIRECTORY.
+``` from django import forms
+
+class CreateNewList(forms.Form):
+    name = forms.CharField(label="Name",max_length=200)
+    check = forms.BooleanField()
+
+```
+- What this does is that it creates the form elements such as name and check being boolean and a charfield
+- Now pass on views.py by accessing it and focus on create function
+- Create instance of CreateNewList in the views.py 
+```
+def create(response):
+    form = CreateNewList()
+    return render(response, "main/create.html",{"form":form})
+
+```
+
+- Run server
+- Django is capable of generating html values on your forms
+- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `#f03c15` VERY IMPORTANT. DJANGO GENERATES FORM WITH VALUES IMMEDIATELY HAS REQUIRED ATTRIBUTES. MEANING YOU NEED TO FILL THEM UP - ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `#f03c15`
+- To make it optional you can do dis.
+- ``` check = forms.BooleanField(required=False) ``` on the forms.py
+- ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `#f03c15` Create this ``` {% csrf_token %} ``` everytime you create a form submit because for some reason django requires this. ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) `#f03c15`
+- 2 TYPE OF FORM SUBMISSION.
+- POST IS VERY IMPORTANT FOR ENCRYPTION, BETTER SECURITY AND ALSO MAKE MODIFICATIONS TO DB
+- GET IS JUST FOR RETRIEVING INFORMATION. LIKE IDS. IT GETS PASTED TO THE URLS AND GETS THAT INFORMATION PUBLICLY. FOR INSTANCE, YOUTUBE.COM/search=techwithtim. THE search=techwithtim is a GET REQUEST. CAN BE SHOWN WITH EVERYONE. NOT AS SENSITIVE. 
+#### EDITING VIEWS.PY TO COINCIDE WITH THE POST FORM.
+```
+from django.http import HttpResponse, HttpResponseRedirect
+# update imports 
+
+def create(response):
+    if response.method =="POST":
+        form = CreateNewList(response.POST)
+        if form.is_valid():
+            n=form.cleaned_data['name'] # clean data, unencrypt
+            t=ToDoList(name=n)
+            t.save()
+        return HttpResponseRedirect("/%i" %t.id)
+    else:
+        form = CreateNewList()
+    return render(response, "main/create.html",{"form":form})
+```
+- What it does is that n is the cleaned form of the POST 'name'. It gets that then creates t model to insert a toDoList object then saves it to sqlite3 db and then return a HttpResponseRedirect with the id that it has been automatically given when creating the ToDoList. which is t.id. Now, When saved, it redirects to the link of the todoList Id.
+- Also if response_method is if response_method is a POST or a GET.
+### CUSTOM FORMS
+#### DYNAMICALLY ADD FORMS
+- delete complete and incomplete in list.html
+#### THE GOAL IS TO MAKE TODOLIST ITEMS HAVE A CHECK BESIDE THEM TO KNOW IF THEY'RE COMPLETE OR NOT
+- code this 
+```
+{% extends 'main/base.html' %}
+{% block title %} View List {% endblock %}
+
+{% block content %}
+    <h1>{{ls.name}} </h1> 
+    <form method="post" action="#">
+        {% csrf_token %}
+    <ul>
+    {% for item in ls.item_set.all %}
+        {% if item.complete == False %}
+            <li><input type="checkbox",value="clicked",name="c{{item.id}}" checked>{{item.text}}</li>
+
+        {% else %} 
+            <li><input type="checkbox",value="clicked",name="c{{item.id}}">{{item.text}}</li> 
+        {% endif %}
+    {% endfor %}
+    </ul> 
+    <button type="submit", name="save", value="save">Save</button>
+    <input type="text",name="new">
+    <button type="submit", name="newItem", value="newItem">Add Item</button>
+    </form>
+{% endblock %}
+```
+- it has new button save and Add Item. csrf token cause of forms then corresponding checkbox to each items
+- then go to views.py to address the list.html
+```
+def index(response,id):
+    ls=ToDoList.objects.get(id=id)
+
+    if response.method=="POST":
+        print(response.POST)
+        if response.POST.get("save"):
+            for item in ls.item_set.all():
+                if response.POST.get("c"+str(item.id))=="clicked":
+                    item.complete=True
+                else:
+                    item.complete=False
+                item.save()
+        elif response.POST.get("newItem"):
+            txt=response.POST.get("new")
+            if len(txt)>2:
+                ls.item_set.create(text=txt, complete=False)
+            else:
+                print("Invalid")
+    return render(response, "main/list.html",{"ls":ls})
+```
+- what this does is that if the form is triggered, it goes on conditional statements that changes the item attributes .complete. 
+
+### ADDING BOOTSTRAP
+- go to base.html
+```
+<html>
+    <head>
+        <style type="text/css">
+        .main{
+            margin-left:160px;
+            padding: 0px 10px;
+        }
+        .sidenav{ 
+            height:100%;
+            width:160px;
+            position: fixed;
+            z-index:1;
+            top:0;
+            left:0;
+            background-color: #111;
+            overflow-x :hidden;
+            padding-top:20px;
+         }
+         .sidenav a{ 
+             padding:6px 8px 6px 16px;
+             text-decoration:none;
+             font-size:25px;
+             color: #818181;
+             display: block;
+
+         }
+         .sidenav a:hover{ 
+             
+             color: #f1f1f1;
+    
+
+         }
+
+        
+        
+        </style>
+        <title>{% block title %} Mer's Website {% endblock %}</title>
+    </head>
+    <body>
+        <div class="sidenav">
+            <a href="/home">Home</a>
+            <a href="/create">Create</a>
+            <a href="/2">View</a>
+
+        </div>
+        <div id="content",  name="content" , class="main">
+        {% block content %}
+        {% endblock %}
+        </div>
+        
+    </body>
+</html>
+```
+- What this does is put css elements to make a sidebar. 
+### BOOTSTRAP ATTACHING
+- copy bootstrap link <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+- copy the metatags important to set up the website <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+- add <!doctype html> in the top of base.html
+### Create User Registration
+#### MAKE AN APPLICAtion to reigster/login so that it can be reused in other projects.
+- do this on mysite directory ```python manage.py startapp register```
+- then go to urls.py of main application and link the register by using this ``` path('register/', include("main.urls")), ```
+- then in register application views.py insert this ``` def register(response): return render() ``` atm.
+- create templates/register/register.html in the register folder
+- and then in the register.html extend the base.html and also blocks and also create a button and form. like this.
+```
+{% extends "main/base.html" %}
+{% block title %}
+Registration
+{% endblock %}
+
+{% block content %}
+<h3>Create Page</h3>
+<form method="post" action="/register/" class="form-group">
+{% csrf_token %}
+<div class="input-group mb-3">
+
+<div class="input-group-prepend">
+<button type="submit", name="save", class="btn btn-success">Register Account</button>
+</div>
+{{form}}
+</div>
+</form>
+{% endblock %}
+```
+- So Django has built in user creation libraries so we just need to code for button and where we put form
+- these are the libraries.
+``` 
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+
+def register(response):
+    form = UserCreationForm()
+    return render(response,"register/register.html",{"form":form})
+```
+- What this does is create built in form by library of django
+- Next is DO NOT FORGET TO UPDATE SETTINGS.PY FOR NEW APPLICATION SUCH AS REGISTER.py in mysite app. ``` 'register.apps.RegisterConfig', ```
+#### CREATING THE FORM BODY IN DJANGO
+- add this to views.py
+```
+def register(response):
+    if response.method=="POST":
+        form = UserCreationForm(response.POST)
+        if form.is_valid():
+            form.save()
+        
+        return redirect("/home")
+    else:
+        form=UserCreationForm()
+    return render(response,"register/register.html",{"form":form})
+```
+- Checks if reponse is a post and if ever created form is valid then go to homepage
+- create forms.py in the register.py
+```
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+```
+- add a model for the registration form
+```
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+from django import forms
+from django.contrib.auth.models import User
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField()
+    class Meta: #THIS NEEDS TO BE EXACT "META"
+        model=User #This is the value in the db that will be changed
+        fields=["username","email","password1","password2"]
+```
+- change views.py in the register like this. NOTICE THAT I COMMENTED OUT django.contrib.auth import login, authenticate and from django.contrib.auth.forms import UserCreationForm but imported from .forms import RegisterForm
+```
+from django.shortcuts import render,redirect
+# from django.contrib.auth import login, authenticate
+# from django.contrib.auth.forms import UserCreationForm
+from .forms import RegisterForm
+
+# Create your views here.
+def register(response):
+    if response.method=="POST":
+        form = RegisterForm(response.POST)
+        if form.is_valid():
+            form.save()
+        
+        return redirect("/home")
+    else:
+        form=RegisterForm()
+    return render(response,"register/register.html",{"form":form})
+```
+#### EDITING FORM USING CRISPY
+- Automatic styling for forms ```pip install django-crispy-forms```
+-then go to settings.py of mysite INSTALLED_APPS ``` "crispy_forms", ``` and at the bottom of settings.py ``` CRISPY_TEMPLATE_PACK="bootstrap4"```
+- now go to the register.py and add this before the codeline where u will have to use it 
+``` {% load crispy_forms_tags %} ```
+- and then apply it on your forms. with the use of | sign. like this
+```
+{% extends "main/base.html" %}
+{% block title %}
+Registration
+{% endblock %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h3>Create Page</h3>
+<form method="post" action="/register/" class="form-group">
+{% csrf_token %}
+<div class="input-group mb-3">
+
+<div class="input-group-prepend">
+<button type="submit", name="save", class="btn btn-success">Register Account</button>
+</div>
+{{form|crispy}}
+</div>
+</form>
+{% endblock %}
+```
