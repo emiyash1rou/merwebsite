@@ -607,3 +607,73 @@ Registration
 </form>
 {% endblock %}
 ```
+### LOGGING IN AND AUTHENTICATING USERS AND RESTRICTING BASED ON PERMISSIONS
+- Use this in myiste urls.py ``` path('', include("django.contrib.auth.urls")), ```
+- create a registration folder inside register/templates folder.
+- now create login.html
+- copy this code to be able to use sidebar and also create a form with crispy enabled and a link to registration.
+```
+{% extends "main/base.html" %}
+{% block title %}Login {% endblock%}
+{% block content %}
+{% load crispy_forms_tags %}
+<form method="post" class="form-group">
+    {% csrf_token %}
+    {{form}}
+    
+    <button type="submit" class="btn btn-success">Log in</button>
+    <p>Don't have an account? Create one. <a href="/register"> Register here</a> </p>
+</form>
+{% endblock%}
+```
+- then go to setting.py in mysite and add a redirect to the homepage whenever logged in. AT the bottom
+```
+LOGIN_REDIRECT_URL="/"
+```
+- go to base.html and add this code around the block content
+```
+{% if user.is_authenticated %}
+        {% block content %}
+        {% endblock %}
+        {% else %}<p>Login <a href="login">here.</a></p>
+        {% endif %}
+```
+- what this does is find if user is authenticated and then redirect etc.
+- for logout, we can just go to setings.py and do this ```LOGOUT_REDIRECT_URL="/"``` 
+- you can use ``` response.user ``` in your views to access user values if ever there is in views.py.
+#### ATTACHING MODEL USER AND TODOLIST
+- go to models.py of main then insert code
+- to import User Model from django db to main : ``` from django.contrib.auth.models import User ```
+- to insert User Model to the ToDoList ``` user = models.ForeignKey(User, on_delete=models.CASCADE) ```
+- update model by doing this ``` python manage.py makemigrations``` and ``` python manage.py migrate```
+- if it doesn't work delete all database file. everything inside migrations folder and pycache except init.py files. All migrations folder you see and pycache. Delete everything except init.py files
+#### SAVING TO DO LIST TO A USER
+- do this on views.py main 
+```
+def create(response):
+    
+    if response.method =="POST":
+        form = CreateNewList(response.POST)
+        if form.is_valid():
+            n=form.cleaned_data['name'] # clean data, unencrypt
+            t=ToDoList(name=n)
+            t.save()
+            response.user.todolist.add(t)
+        return HttpResponseRedirect("/%i" %t.id)
+    else:
+        form = CreateNewList()
+    return render(response, "main/create.html",{"form":form})
+```
+#### CREATE VIEW PAGE
+- In main application create urls.py with the path ``` path("view/",views.view,name="view"), ```
+- and then reflect it by going to the views.py creating a function view.
+```
+{% extends "main/base.html" %}
+{% block title %} View {% endblock %}
+{% block content %} View 
+{% for td in user.todolist_all %}
+<p><a href="/{{td.id}}">{{td.name}}</a></p>
+{% endfor %}
+{% endblock %}
+```
+- then 

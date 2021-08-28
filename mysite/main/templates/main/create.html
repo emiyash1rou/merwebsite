@@ -2,6 +2,7 @@
 {% block title %} Create New List {% endblock %}
 {% block content %} 
 <h3>Create Page</h3>
+{% if user.is_authenticated %}
 <form method="post" class="form-group">
 {% csrf_token %}
 <div class="input-group mb-3">
@@ -12,5 +13,8 @@
 {{form.name}}
 </div>
 </form>
+{% else %}
+<p> You must be logged in to be able to create pages. Log in <a href="/login">here!</a> </p>
+{% endif %}
 
 {% endblock %}

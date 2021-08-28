@@ -43,9 +43,15 @@
     </head>
     <body>
         <div class="sidenav">
-            <a href="/home">Home</a>
+            <a href="/">Home</a>
             <a href="/create">Create</a>
-            <a href="/2">View</a>
+            <a href="/view">View</a>
+            <!-- bad practice, people can go to website via inputting a link, subject to change -->
+            {% if user.is_authenticated %}
+            <a href="/logout">Log out</a>
+            {% else %}
+            <a href="/login">Log in</a>
+            {% endif %}
 
         </div>
         <div id="content",  name="content" , class="main">
@@ -53,8 +59,10 @@
             <div class="col-8">
                 <h1 class="mt-2">Merhamdin's Website</h1>
                 <hr class="mt-0 mb-4">
+        
         {% block content %}
         {% endblock %}
+        
             </div>
         </div>
         </div>

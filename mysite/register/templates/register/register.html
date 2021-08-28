@@ -7,9 +7,9 @@ Registration
 <h3>Create Page</h3>
 <form method="post" action="/register/" class="form-group">
 {% csrf_token %}
-
-<button type="submit", name="save", class="btn btn-success">Register Account</button>
 {{form|crispy}}
+<button type="submit", name="save", class="btn btn-success">Register Account</button>
+
 
 </form>
 {% endblock %}
