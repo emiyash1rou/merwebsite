@@ -1,5 +1,5 @@
 {% extends "main/base.html" %}
-{% block title %} View {% endblock %}
+{% block title %} View To Do Lists {% endblock %}
 {% block content %} 
 {% if user.is_authenticated %}
 <ul class="list-group">
@@ -8,6 +8,6 @@
 {% endfor %}
 </ul>
 {% else %}
-<h3>Login <a href="/login">Here</a></h3>
+<p> You must be logged in to be able to view To Do Lists. Log in <a href="/login">here!</a> </p>
 {% endif %}
 {% endblock %}

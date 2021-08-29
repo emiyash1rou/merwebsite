@@ -676,4 +676,8 @@ def create(response):
 {% endfor %}
 {% endblock %}
 ```
-- then 
+- then add certain condition like if user.is_authenticated and etc on the websites
+- THEN YOURE DONE
+# STATUS 
+- Ok website but still no design.
+- Next is Html/css tutorials.

@@ -4,7 +4,7 @@ Registration
 {% endblock %}
 {% load crispy_forms_tags %}
 {% block content %}
-<h3>Create Page</h3>
+<h3>Create To Do List</h3>
 <form method="post" action="/register/" class="form-group">
 {% csrf_token %}
 {{form|crispy}}
